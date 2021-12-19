@@ -137,13 +137,13 @@ namespace osu.Game.Screens.Menu
 
                 if (e.NewValue.IsSupporter)
                 {
-                    supportFlow.AddText("Eternal thanks to you for supporting osu!", formatSemiBold);
+                    supportFlow.AddText("Everyone is Supporter! <3", formatSemiBold);
                 }
                 else
                 {
-                    supportFlow.AddText("Consider becoming an ", formatSemiBold);
-                    supportFlow.AddLink("osu!supporter", "https://osu.ppy.sh/home/support", formatSemiBold);
-                    supportFlow.AddText(" to help support osu!'s development", formatSemiBold);
+                    supportFlow.AddText("Hikaru does not accept payments for ", formatSemiBold);
+                    supportFlow.AddLink("supporter", "https://osu.hikaru.pw/home/support", formatSemiBold);
+                    supportFlow.AddText(" , but may accept donations in the future!", formatSemiBold);
                 }
 
                 heart = supportFlow.AddIcon(FontAwesome.Solid.Heart, t =>

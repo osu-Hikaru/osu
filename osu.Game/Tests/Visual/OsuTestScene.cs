@@ -229,9 +229,9 @@ namespace osu.Game.Tests.Visual
                 Status = BeatmapOnlineStatus.Ranked,
                 Covers = new BeatmapSetOnlineCovers
                 {
-                    Cover = "https://assets.ppy.sh/beatmaps/163112/covers/cover.jpg",
-                    Card = "https://assets.ppy.sh/beatmaps/163112/covers/card.jpg",
-                    List = "https://assets.ppy.sh/beatmaps/163112/covers/list.jpg"
+                    Cover = "https://assets.hikaru.pw/beatmaps/163112/covers/cover.jpg",
+                    Card = "https://assets.hikaru.pw/beatmaps/163112/covers/card.jpg",
+                    List = "https://assets.hikaru.pw/beatmaps/163112/covers/list.jpg"
                 },
                 Title = beatmap.Metadata.Title,
                 TitleUnicode = beatmap.Metadata.TitleUnicode,

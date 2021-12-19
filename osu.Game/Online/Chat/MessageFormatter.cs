@@ -62,7 +62,7 @@ namespace osu.Game.Online.Chat
                                     .Split('/').Last(); // only keep domain name, ignoring protocol.
         }
 
-        private static string websiteRootUrl = "osu.ppy.sh";
+        private static string websiteRootUrl = "osu.hikaru.pw";
 
         private static void handleMatches(Regex regex, string display, string link, MessageFormatterResult result, int startIndex = 0, LinkAction? linkActionOverride = null, char[]? escapeChars = null)
         {
@@ -160,10 +160,10 @@ namespace osu.Game.Online.Chat
                                     return new LinkDetails(LinkAction.External, url);
 
                                 if (args.Length > 4 && int.TryParse(args[4], out int id))
-                                    // https://osu.ppy.sh/beatmapsets/1154158#osu/2768184
+                                    // https://osu.hikaru.pw/beatmapsets/1154158#osu/2768184
                                     return new LinkDetails(LinkAction.OpenBeatmap, id.ToString());
 
-                                // https://osu.ppy.sh/beatmapsets/1154158#whatever
+                                // https://osu.hikaru.pw/beatmapsets/1154158#whatever
                                 string trimmed = mainArg.Split('#').First();
                                 if (int.TryParse(trimmed, out id))
                                     return new LinkDetails(LinkAction.OpenBeatmapSet, id.ToString());
@@ -262,7 +262,7 @@ namespace osu.Game.Online.Chat
             handleMatches(old_link_regex, "{1}", "{2}", result, startIndex, escapeChars: new[] { '(', ')' });
 
             // handle wiki links
-            handleMatches(wiki_regex, "{1}", "https://osu.ppy.sh/wiki/{1}", result, startIndex);
+            handleMatches(wiki_regex, "{1}", "https://osu.hikaru.pw/wiki/{1}", result, startIndex);
 
             // handle bare links
             handleAdvanced(advanced_link_regex, result, startIndex);
