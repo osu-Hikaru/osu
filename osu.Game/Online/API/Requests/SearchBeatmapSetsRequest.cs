@@ -56,7 +56,7 @@ namespace osu.Game.Online.API.Requests
             SearchGenre genre = SearchGenre.Any,
             SearchLanguage language = SearchLanguage.Any,
             IReadOnlyCollection<SearchExtra> extra = null,
-            IReadOnlyCollection<ScoreRank> ranks = null,
+           // IReadOnlyCollection<ScoreRank> ranks = null,
             SearchPlayed played = SearchPlayed.Any,
             SearchExplicit explicitContent = SearchExplicit.Hide)
         {
@@ -71,7 +71,7 @@ namespace osu.Game.Online.API.Requests
             Genre = genre;
             Language = language;
             Extra = extra;
-            Ranks = ranks;
+            //Ranks = ranks;
             Played = played;
             ExplicitContent = explicitContent;
         }

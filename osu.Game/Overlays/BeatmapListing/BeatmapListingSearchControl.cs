@@ -43,7 +43,7 @@ namespace osu.Game.Overlays.BeatmapListing
 
         public BindableList<SearchExtra> Extra => extraFilter.Current;
 
-        public BindableList<ScoreRank> Ranks => ranksFilter.Current;
+        //public BindableList<ScoreRank> Ranks => ranksFilter.Current;
 
         public Bindable<SearchPlayed> Played => playedFilter.Current;
 
@@ -71,7 +71,7 @@ namespace osu.Game.Overlays.BeatmapListing
         private readonly BeatmapSearchFilterRow<SearchGenre> genreFilter;
         private readonly BeatmapSearchFilterRow<SearchLanguage> languageFilter;
         private readonly BeatmapSearchMultipleSelectionFilterRow<SearchExtra> extraFilter;
-        private readonly BeatmapSearchScoreFilterRow ranksFilter;
+        //private readonly BeatmapSearchScoreFilterRow ranksFilter;
         private readonly BeatmapSearchFilterRow<SearchPlayed> playedFilter;
         private readonly BeatmapSearchFilterRow<SearchExplicit> explicitContentFilter;
 
@@ -134,7 +134,7 @@ namespace osu.Game.Overlays.BeatmapListing
                                     genreFilter = new BeatmapSearchFilterRow<SearchGenre>(BeatmapsStrings.ListingSearchFiltersGenre),
                                     languageFilter = new BeatmapSearchFilterRow<SearchLanguage>(BeatmapsStrings.ListingSearchFiltersLanguage),
                                     extraFilter = new BeatmapSearchMultipleSelectionFilterRow<SearchExtra>(BeatmapsStrings.ListingSearchFiltersExtra),
-                                    ranksFilter = new BeatmapSearchScoreFilterRow(),
+                                    //ranksFilter = new BeatmapSearchScoreFilterRow(),
                                     playedFilter = new BeatmapSearchFilterRow<SearchPlayed>(BeatmapsStrings.ListingSearchFiltersPlayed),
                                     explicitContentFilter = new BeatmapSearchFilterRow<SearchExplicit>(BeatmapsStrings.ListingSearchFiltersNsfw),
                                 }

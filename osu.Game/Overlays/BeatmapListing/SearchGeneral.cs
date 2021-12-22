@@ -7,19 +7,19 @@ using osu.Game.Resources.Localisation.Web;
 
 namespace osu.Game.Overlays.BeatmapListing
 {
-    public enum SearchGeneral
+   public enum SearchGeneral
     {
-        [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralRecommended))]
-        [Description("Recommended difficulty")]
-        Recommended,
+        //[LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralRecommended))]
+        //[Description("Recommended difficulty")]
+        //Recommended,
 
         [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralConverts))]
         [Description("Include converted beatmaps")]
         Converts,
 
-        [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralFollows))]
-        [Description("Subscribed mappers")]
-        Follows,
+        //[LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralFollows))]
+        //[Description("Subscribed mappers")]
+        //Follows,
 
         [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.GeneralFeaturedArtists))]
         [Description("Featured artists")]

@@ -11,10 +11,10 @@ namespace osu.Game.Overlays.BeatmapListing
         [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.PlayedAny))]
         Any,
 
-        [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.PlayedPlayed))]
-        Played,
+        //[LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.PlayedPlayed))]
+        //Played,
 
-        [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.PlayedUnplayed))]
-        Unplayed
+        //[LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.PlayedUnplayed))]
+        //Unplayed
     }
 }

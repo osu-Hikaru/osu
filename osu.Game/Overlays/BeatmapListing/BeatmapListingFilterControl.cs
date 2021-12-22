@@ -141,7 +141,7 @@ namespace osu.Game.Overlays.BeatmapListing
             searchControl.Genre.BindValueChanged(_ => queueUpdateSearch());
             searchControl.Language.BindValueChanged(_ => queueUpdateSearch());
             searchControl.Extra.CollectionChanged += (_, __) => queueUpdateSearch();
-            searchControl.Ranks.CollectionChanged += (_, __) => queueUpdateSearch();
+            //searchControl.Ranks.CollectionChanged += (_, __) => queueUpdateSearch();
             searchControl.Played.BindValueChanged(_ => queueUpdateSearch());
             searchControl.ExplicitContent.BindValueChanged(_ => queueUpdateSearch());
 
@@ -196,7 +196,7 @@ namespace osu.Game.Overlays.BeatmapListing
                 searchControl.Genre.Value,
                 searchControl.Language.Value,
                 searchControl.Extra,
-                searchControl.Ranks,
+                //searchControl.Ranks,
                 searchControl.Played.Value,
                 searchControl.ExplicitContent.Value);
 
@@ -222,8 +222,8 @@ namespace osu.Game.Overlays.BeatmapListing
                     if (searchControl.Played.Value != SearchPlayed.Any)
                         filters.Add(BeatmapsStrings.ListingSearchFiltersPlayed);
 
-                    if (searchControl.Ranks.Any())
-                        filters.Add(BeatmapsStrings.ListingSearchFiltersRank);
+                    //if (searchControl.Ranks.Any())
+                    //    filters.Add(BeatmapsStrings.ListingSearchFiltersRank);
 
                     if (filters.Any())
                     {

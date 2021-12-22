@@ -35,8 +35,8 @@ namespace osu.Game.Overlays.BeatmapListing
         [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.StatusGraveyard))]
         Graveyard,
 
-        [LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.StatusMine))]
-        [Description("My Maps")]
-        Mine,
+        //[LocalisableDescription(typeof(BeatmapsStrings), nameof(BeatmapsStrings.StatusMine))]
+        //[Description("My Maps")]
+        //Mine,
     }
 }
