@@ -93,7 +93,7 @@ namespace osu.Game.Online.API.Requests.Responses
             var modInstances = Mods.Select(apiMod => rulesetInstance.CreateModFromAcronym(apiMod.Acronym)).Where(m => m != null).ToArray();
 
             // all API scores provided by this class are considered to be legacy.
-            // modInstances = modInstances.Append(rulesetInstance.CreateMod<ModClassic>()).ToArray();
+            modInstances = modInstances.Append(rulesetInstance.CreateMod<ModClassic>()).ToArray();
 
             var scoreInfo = new ScoreInfo
             {
