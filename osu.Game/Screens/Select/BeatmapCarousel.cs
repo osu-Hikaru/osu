@@ -114,9 +114,10 @@ namespace osu.Game.Screens.Select
         {
             CarouselRoot newRoot = new CarouselRoot(this);
 
-            newRoot.AddChildren(beatmapSets.Select(createCarouselSet).Where(g => g != null));
+            newRoot.AddChildren(beatmapSets.Select(s => createCarouselSet(s.Detach())).Where(g => g != null));
 
             root = newRoot;
+
             if (selectedBeatmapSet != null && !beatmapSets.Contains(selectedBeatmapSet.BeatmapSet))
                 selectedBeatmapSet = null;
 
@@ -126,14 +127,8 @@ namespace osu.Game.Screens.Select
 
             applyActiveCriteria(false);
 
-            // Run on late scheduler want to ensure this runs after all pending UpdateBeatmapSet / RemoveBeatmapSet operations are run.
-            SchedulerAfterChildren.Add(() =>
-            {
-                BeatmapSetsChanged?.Invoke();
-                BeatmapSetsLoaded = true;
-
-                itemsCache.Invalidate();
-            });
+            if (loadedTestBeatmaps)
+                signalBeatmapsLoaded();
         }
 
         private readonly List<CarouselItem> visibleItems = new List<CarouselItem>();
@@ -181,22 +176,27 @@ namespace osu.Game.Screens.Select
 
             RightClickScrollingEnabled.ValueChanged += enabled => Scroll.RightMouseScrollbar = enabled.NewValue;
             RightClickScrollingEnabled.TriggerChange();
+
+            if (!loadedTestBeatmaps)
+            {
+                realm.Run(r => loadBeatmapSets(getBeatmapSets(r)));
+            }
         }
 
         [Resolved]
-        private RealmContextFactory realmFactory { get; set; }
+        private RealmAccess realm { get; set; }
 
         protected override void LoadComplete()
         {
             base.LoadComplete();
 
-            subscriptionSets = realmFactory.Context.All<BeatmapSetInfo>().Where(s => !s.DeletePending && !s.Protected).QueryAsyncWithNotifications(beatmapSetsChanged);
-            subscriptionBeatmaps = realmFactory.Context.All<BeatmapInfo>().Where(b => !b.Hidden).QueryAsyncWithNotifications(beatmapsChanged);
+            subscriptionSets = realm.RegisterForNotifications(getBeatmapSets, beatmapSetsChanged);
+            subscriptionBeatmaps = realm.RegisterForNotifications(r => r.All<BeatmapInfo>().Where(b => !b.Hidden), beatmapsChanged);
 
             // Can't use main subscriptions because we can't lookup deleted indices.
             // https://github.com/realm/realm-dotnet/discussions/2634#discussioncomment-1605595.
-            subscriptionDeletedSets = realmFactory.Context.All<BeatmapSetInfo>().Where(s => s.DeletePending && !s.Protected).QueryAsyncWithNotifications(deletedBeatmapSetsChanged);
-            subscriptionHiddenBeatmaps = realmFactory.Context.All<BeatmapInfo>().Where(b => b.Hidden).QueryAsyncWithNotifications(beatmapsChanged);
+            subscriptionDeletedSets = realm.RegisterForNotifications(r => r.All<BeatmapSetInfo>().Where(s => s.DeletePending && !s.Protected), deletedBeatmapSetsChanged);
+            subscriptionHiddenBeatmaps = realm.RegisterForNotifications(r => r.All<BeatmapInfo>().Where(b => b.Hidden), beatmapsChanged);
         }
 
         private void deletedBeatmapSetsChanged(IRealmCollection<BeatmapSetInfo> sender, ChangeSet changes, Exception error)
@@ -209,7 +209,7 @@ namespace osu.Game.Screens.Select
                 return;
 
             foreach (int i in changes.InsertedIndices)
-                RemoveBeatmapSet(sender[i]);
+                removeBeatmapSet(sender[i].ID);
         }
 
         private void beatmapSetsChanged(IRealmCollection<BeatmapSetInfo> sender, ChangeSet changes, Exception error)
@@ -220,16 +220,35 @@ namespace osu.Game.Screens.Select
 
             if (changes == null)
             {
-                // initial load
-                loadBeatmapSets(sender);
+                // During initial population, we must manually account for the fact that our original query was done on an async thread.
+                // Since then, there may have been imports or deletions.
+                // Here we manually catch up on any changes.
+                var realmSets = new HashSet<Guid>();
+
+                for (int i = 0; i < sender.Count; i++)
+                    realmSets.Add(sender[i].ID);
+
+                foreach (var id in realmSets)
+                {
+                    if (!root.BeatmapSetsByID.ContainsKey(id))
+                        UpdateBeatmapSet(realm.Realm.Find<BeatmapSetInfo>(id).Detach());
+                }
+
+                foreach (var id in root.BeatmapSetsByID.Keys)
+                {
+                    if (!realmSets.Contains(id))
+                        removeBeatmapSet(id);
+                }
+
+                signalBeatmapsLoaded();
                 return;
             }
 
             foreach (int i in changes.NewModifiedIndices)
-                UpdateBeatmapSet(sender[i]);
+                UpdateBeatmapSet(sender[i].Detach());
 
             foreach (int i in changes.InsertedIndices)
-                UpdateBeatmapSet(sender[i]);
+                UpdateBeatmapSet(sender[i].Detach());
         }
 
         private void beatmapsChanged(IRealmCollection<BeatmapInfo> sender, ChangeSet changes, Exception error)
@@ -239,14 +258,30 @@ namespace osu.Game.Screens.Select
                 return;
 
             foreach (int i in changes.InsertedIndices)
-                UpdateBeatmapSet(sender[i].BeatmapSet);
+            {
+                var beatmapInfo = sender[i];
+                var beatmapSet = beatmapInfo.BeatmapSet;
+
+                Debug.Assert(beatmapSet != null);
+
+                // Only require to action here if the beatmap is missing.
+                // This avoids processing these events unnecessarily when new beatmaps are imported, for example.
+                if (root.BeatmapSetsByID.TryGetValue(beatmapSet.ID, out var existingSet)
+                    && existingSet.BeatmapSet.Beatmaps.All(b => b.ID != beatmapInfo.ID))
+                {
+                    UpdateBeatmapSet(beatmapSet.Detach());
+                }
+            }
         }
 
-        public void RemoveBeatmapSet(BeatmapSetInfo beatmapSet) => Schedule(() =>
-        {
-            var existingSet = beatmapSets.FirstOrDefault(b => b.BeatmapSet.Equals(beatmapSet));
+        private IQueryable<BeatmapSetInfo> getBeatmapSets(Realm realm) => realm.All<BeatmapSetInfo>().Where(s => !s.DeletePending && !s.Protected);
 
-            if (existingSet == null)
+        public void RemoveBeatmapSet(BeatmapSetInfo beatmapSet) =>
+            removeBeatmapSet(beatmapSet.ID);
+
+        private void removeBeatmapSet(Guid beatmapSetID) => Schedule(() =>
+        {
+            if (!root.BeatmapSetsByID.TryGetValue(beatmapSetID, out var existingSet))
                 return;
 
             root.RemoveChild(existingSet);
@@ -257,35 +292,32 @@ namespace osu.Game.Screens.Select
         {
             Guid? previouslySelectedID = null;
 
-            CarouselBeatmapSet existingSet = beatmapSets.FirstOrDefault(b => b.BeatmapSet.Equals(beatmapSet));
-
             // If the selected beatmap is about to be removed, store its ID so it can be re-selected if required
-            if (existingSet?.State?.Value == CarouselItemState.Selected)
+            if (selectedBeatmapSet?.BeatmapSet.ID == beatmapSet.ID)
                 previouslySelectedID = selectedBeatmap?.BeatmapInfo.ID;
 
             var newSet = createCarouselSet(beatmapSet);
 
-            if (existingSet != null)
-                root.RemoveChild(existingSet);
+            root.RemoveChild(beatmapSet.ID);
 
-            if (newSet == null)
+            if (newSet != null)
             {
-                itemsCache.Invalidate();
-                return;
+                root.AddChild(newSet);
+
+                // check if we can/need to maintain our current selection.
+                if (previouslySelectedID != null)
+                    select((CarouselItem)newSet.Beatmaps.FirstOrDefault(b => b.BeatmapInfo.ID == previouslySelectedID) ?? newSet);
             }
 
-            root.AddChild(newSet);
-
-            // only reset scroll position if already near the scroll target.
-            // without this, during a large beatmap import it is impossible to navigate the carousel.
-            applyActiveCriteria(false, alwaysResetScrollPosition: false);
-
-            // check if we can/need to maintain our current selection.
-            if (previouslySelectedID != null)
-                select((CarouselItem)newSet.Beatmaps.FirstOrDefault(b => b.BeatmapInfo.ID == previouslySelectedID) ?? newSet);
-
             itemsCache.Invalidate();
-            Schedule(() => BeatmapSetsChanged?.Invoke());
+
+            Schedule(() =>
+            {
+                if (!Scroll.UserScrolling)
+                    ScrollToSelected(true);
+
+                BeatmapSetsChanged?.Invoke();
+            });
         });
 
         /// <summary>
@@ -518,6 +550,17 @@ namespace osu.Game.Screens.Select
             }
         }
 
+        private void signalBeatmapsLoaded()
+        {
+            if (!BeatmapSetsLoaded)
+            {
+                BeatmapSetsChanged?.Invoke();
+                BeatmapSetsLoaded = true;
+            }
+
+            itemsCache.Invalidate();
+        }
+
         private float? scrollTarget;
 
         /// <summary>
@@ -677,10 +720,13 @@ namespace osu.Game.Screens.Select
 
         private CarouselBeatmapSet createCarouselSet(BeatmapSetInfo beatmapSet)
         {
+            // This can be moved to the realm query if required using:
+            // .Filter("DeletePending == false && Protected == false && ANY Beatmaps.Hidden == false")
+            //
+            // As long as we are detaching though, it makes more sense to do it here as adding to the realm query has an overhead
+            // as seen at https://github.com/realm/realm-dotnet/discussions/2773#discussioncomment-2004275.
             if (beatmapSet.Beatmaps.All(b => b.Hidden))
                 return null;
-
-            beatmapSet = beatmapSet.Detach();
 
             var set = new CarouselBeatmapSet(beatmapSet)
             {
@@ -874,6 +920,8 @@ namespace osu.Game.Screens.Select
         {
             private readonly BeatmapCarousel carousel;
 
+            public readonly Dictionary<Guid, CarouselBeatmapSet> BeatmapSetsByID = new Dictionary<Guid, CarouselBeatmapSet>();
+
             public CarouselRoot(BeatmapCarousel carousel)
             {
                 // root should always remain selected. if not, PerformSelection will not be called.
@@ -881,6 +929,28 @@ namespace osu.Game.Screens.Select
                 State.ValueChanged += state => State.Value = CarouselItemState.Selected;
 
                 this.carousel = carousel;
+            }
+
+            public override void AddChild(CarouselItem i)
+            {
+                CarouselBeatmapSet set = (CarouselBeatmapSet)i;
+                BeatmapSetsByID.Add(set.BeatmapSet.ID, set);
+
+                base.AddChild(i);
+            }
+
+            public void RemoveChild(Guid beatmapSetID)
+            {
+                if (BeatmapSetsByID.TryGetValue(beatmapSetID, out var carouselBeatmapSet))
+                    RemoveChild(carouselBeatmapSet);
+            }
+
+            public override void RemoveChild(CarouselItem i)
+            {
+                CarouselBeatmapSet set = (CarouselBeatmapSet)i;
+                BeatmapSetsByID.Remove(set.BeatmapSet.ID);
+
+                base.RemoveChild(i);
             }
 
             protected override void PerformSelection()

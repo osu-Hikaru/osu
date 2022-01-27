@@ -33,8 +33,8 @@ namespace osu.Game.Beatmaps
 
         protected override string[] HashableFileTypes => new[] { ".osu" };
 
-        public BeatmapModelManager(RealmContextFactory contextFactory, Storage storage, BeatmapOnlineLookupQueue? onlineLookupQueue = null)
-            : base(contextFactory, storage, onlineLookupQueue)
+        public BeatmapModelManager(RealmAccess realm, Storage storage, BeatmapOnlineLookupQueue? onlineLookupQueue = null)
+            : base(realm, storage, onlineLookupQueue)
         {
         }
 
@@ -58,7 +58,7 @@ namespace osu.Game.Beatmaps
             // Warning: The directionality here is important. Changes have to be copied *from* beatmapContent (which comes from editor and is being saved)
             // *to* the beatmapInfo (which is a database model and needs to receive values without the taiko slider velocity multiplier for correct operation).
             // CopyTo() will undo such adjustments, while CopyFrom() will not.
-            beatmapContent.Difficulty.CopyTo(beatmapInfo.BaseDifficulty);
+            beatmapContent.Difficulty.CopyTo(beatmapInfo.Difficulty);
 
             // All changes to metadata are made in the provided beatmapInfo, so this should be copied to the `IBeatmap` before encoding.
             beatmapContent.BeatmapInfo = beatmapInfo;
@@ -88,7 +88,7 @@ namespace osu.Game.Beatmaps
         private static string getFilename(BeatmapInfo beatmapInfo)
         {
             var metadata = beatmapInfo.Metadata;
-            return $"{metadata.Artist} - {metadata.Title} ({metadata.Author}) [{beatmapInfo.DifficultyName}].osu".GetValidArchiveContentFilename();
+            return $"{metadata.Artist} - {metadata.Title} ({metadata.Author.Username}) [{beatmapInfo.DifficultyName}].osu".GetValidArchiveContentFilename();
         }
 
         /// <summary>
@@ -98,17 +98,16 @@ namespace osu.Game.Beatmaps
         /// <returns>The first result for the provided query, or null if no results were found.</returns>
         public BeatmapInfo? QueryBeatmap(Expression<Func<BeatmapInfo, bool>> query)
         {
-            using (var context = ContextFactory.CreateContext())
-                return context.All<BeatmapInfo>().FirstOrDefault(query)?.Detach();
+            return Realm.Run(realm => realm.All<BeatmapInfo>().FirstOrDefault(query)?.Detach());
         }
 
         public void Update(BeatmapSetInfo item)
         {
-            using (var realm = ContextFactory.CreateContext())
+            Realm.Write(realm =>
             {
                 var existing = realm.Find<BeatmapSetInfo>(item.ID);
-                realm.Write(r => item.CopyChangesToRealm(existing));
-            }
+                item.CopyChangesToRealm(existing);
+            });
         }
     }
 }

@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using osu.Framework.Extensions;
 using osu.Framework.Screens;
 using osu.Framework.Testing;
 using osu.Game.Beatmaps;
@@ -41,10 +40,10 @@ namespace osu.Game.Tests.Visual.Navigation
                             Metadata = new BeatmapMetadata
                             {
                                 Artist = "SomeArtist",
-                                AuthorString = "SomeAuthor",
+                                Author = { Username = "SomeAuthor" },
                                 Title = "import"
                             },
-                            BaseDifficulty = new BeatmapDifficulty(),
+                            Difficulty = new BeatmapDifficulty(),
                             Ruleset = new OsuRuleset().RulesetInfo
                         },
                         new BeatmapInfo
@@ -53,14 +52,14 @@ namespace osu.Game.Tests.Visual.Navigation
                             Metadata = new BeatmapMetadata
                             {
                                 Artist = "SomeArtist",
-                                AuthorString = "SomeAuthor",
+                                Author = { Username = "SomeAuthor" },
                                 Title = "import"
                             },
-                            BaseDifficulty = new BeatmapDifficulty(),
+                            Difficulty = new BeatmapDifficulty(),
                             Ruleset = new OsuRuleset().RulesetInfo
                         },
                     }
-                }).GetResultSafely()?.Value;
+                })?.Value;
             });
         }
 
@@ -135,7 +134,7 @@ namespace osu.Game.Tests.Visual.Navigation
                     BeatmapInfo = beatmap.Beatmaps.First(),
                     Ruleset = ruleset ?? new OsuRuleset().RulesetInfo,
                     User = new GuestUser(),
-                }).GetResultSafely().Value;
+                }).Value;
             });
 
             AddAssert($"import {i} succeeded", () => imported != null);
