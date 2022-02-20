@@ -22,6 +22,7 @@ using osu.Game.Overlays.Notifications;
 using osu.Game.Rulesets;
 using osu.Game.Skinning;
 using osu.Game.Stores;
+using osu.Game.Utils;
 
 #nullable enable
 
@@ -73,7 +74,9 @@ namespace osu.Game.Beatmaps
             new BeatmapModelManager(realm, storage, onlineLookupQueue);
 
         /// <summary>
-        /// Create a new <see cref="WorkingBeatmap"/>.
+        /// Create a new beatmap set, backed by a <see cref="BeatmapSetInfo"/> model,
+        /// with a single difficulty which is backed by a <see cref="BeatmapInfo"/> model
+        /// and represented by the returned usable <see cref="WorkingBeatmap"/>.
         /// </summary>
         public WorkingBeatmap CreateNew(RulesetInfo ruleset, APIUser user)
         {
@@ -90,14 +93,7 @@ namespace osu.Game.Beatmaps
             {
                 Beatmaps =
                 {
-                    new BeatmapInfo
-                    {
-                        Difficulty = new BeatmapDifficulty(),
-                        Ruleset = ruleset,
-                        Metadata = metadata,
-                        WidescreenStoryboard = true,
-                        SamplesMatchPlaybackRate = true,
-                    }
+                    new BeatmapInfo(ruleset, new BeatmapDifficulty(), metadata)
                 }
             };
 
@@ -110,6 +106,79 @@ namespace osu.Game.Beatmaps
                 throw new InvalidOperationException("Failed to import new beatmap");
 
             return imported.PerformRead(s => GetWorkingBeatmap(s.Beatmaps.First()));
+        }
+
+        /// <summary>
+        /// Add a new difficulty to the provided <paramref name="targetBeatmapSet"/> based on the provided <paramref name="referenceWorkingBeatmap"/>.
+        /// The new difficulty will be backed by a <see cref="BeatmapInfo"/> model
+        /// and represented by the returned <see cref="WorkingBeatmap"/>.
+        /// </summary>
+        /// <remarks>
+        /// Contrary to <see cref="CopyExistingDifficulty"/>, this method does not preserve hitobjects and beatmap-level settings from <paramref name="referenceWorkingBeatmap"/>.
+        /// The created beatmap will have zero hitobjects and will have default settings (including difficulty settings), but will preserve metadata and existing timing points.
+        /// </remarks>
+        /// <param name="targetBeatmapSet">The <see cref="BeatmapSetInfo"/> to add the new difficulty to.</param>
+        /// <param name="referenceWorkingBeatmap">The <see cref="WorkingBeatmap"/> to use as a baseline reference when creating the new difficulty.</param>
+        /// <param name="rulesetInfo">The ruleset with which the new difficulty should be created.</param>
+        public virtual WorkingBeatmap CreateNewDifficulty(BeatmapSetInfo targetBeatmapSet, WorkingBeatmap referenceWorkingBeatmap, RulesetInfo rulesetInfo)
+        {
+            var playableBeatmap = referenceWorkingBeatmap.GetPlayableBeatmap(rulesetInfo);
+
+            var newBeatmapInfo = new BeatmapInfo(rulesetInfo, new BeatmapDifficulty(), playableBeatmap.Metadata.DeepClone())
+            {
+                DifficultyName = NamingUtils.GetNextBestName(targetBeatmapSet.Beatmaps.Select(b => b.DifficultyName), "New Difficulty")
+            };
+            var newBeatmap = new Beatmap { BeatmapInfo = newBeatmapInfo };
+            foreach (var timingPoint in playableBeatmap.ControlPointInfo.TimingPoints)
+                newBeatmap.ControlPointInfo.Add(timingPoint.Time, timingPoint.DeepClone());
+
+            return addDifficultyToSet(targetBeatmapSet, newBeatmap, referenceWorkingBeatmap.Skin);
+        }
+
+        /// <summary>
+        /// Add a copy of the provided <paramref name="referenceWorkingBeatmap"/> to the provided <paramref name="targetBeatmapSet"/>.
+        /// The new difficulty will be backed by a <see cref="BeatmapInfo"/> model
+        /// and represented by the returned <see cref="WorkingBeatmap"/>.
+        /// </summary>
+        /// <remarks>
+        /// Contrary to <see cref="CreateNewDifficulty"/>, this method creates a nearly-exact copy of <paramref name="referenceWorkingBeatmap"/>
+        /// (with the exception of a few key properties that cannot be copied under any circumstance, like difficulty name, beatmap hash, or online status).
+        /// </remarks>
+        /// <param name="targetBeatmapSet">The <see cref="BeatmapSetInfo"/> to add the copy to.</param>
+        /// <param name="referenceWorkingBeatmap">The <see cref="WorkingBeatmap"/> to be copied.</param>
+        public virtual WorkingBeatmap CopyExistingDifficulty(BeatmapSetInfo targetBeatmapSet, WorkingBeatmap referenceWorkingBeatmap)
+        {
+            var newBeatmap = referenceWorkingBeatmap.GetPlayableBeatmap(referenceWorkingBeatmap.BeatmapInfo.Ruleset).Clone();
+            BeatmapInfo newBeatmapInfo;
+
+            newBeatmap.BeatmapInfo = newBeatmapInfo = referenceWorkingBeatmap.BeatmapInfo.Clone();
+            // assign a new ID to the clone.
+            newBeatmapInfo.ID = Guid.NewGuid();
+            // add "(copy)" suffix to difficulty name, and additionally ensure that it doesn't conflict with any other potentially pre-existing copies.
+            newBeatmapInfo.DifficultyName = NamingUtils.GetNextBestName(
+                targetBeatmapSet.Beatmaps.Select(b => b.DifficultyName),
+                $"{newBeatmapInfo.DifficultyName} (copy)");
+            // clear the hash, as that's what is used to match .osu files with their corresponding realm beatmaps.
+            newBeatmapInfo.Hash = string.Empty;
+            // clear online properties.
+            newBeatmapInfo.OnlineID = -1;
+            newBeatmapInfo.Status = BeatmapOnlineStatus.None;
+
+            return addDifficultyToSet(targetBeatmapSet, newBeatmap, referenceWorkingBeatmap.Skin);
+        }
+
+        private WorkingBeatmap addDifficultyToSet(BeatmapSetInfo targetBeatmapSet, IBeatmap newBeatmap, ISkin beatmapSkin)
+        {
+            // populate circular beatmap set info <-> beatmap info references manually.
+            // several places like `BeatmapModelManager.Save()` or `GetWorkingBeatmap()`
+            // rely on them being freely traversable in both directions for correct operation.
+            targetBeatmapSet.Beatmaps.Add(newBeatmap.BeatmapInfo);
+            newBeatmap.BeatmapInfo.BeatmapSet = targetBeatmapSet;
+
+            beatmapModelManager.Save(newBeatmap.BeatmapInfo, newBeatmap, beatmapSkin);
+
+            workingBeatmapCache.Invalidate(targetBeatmapSet);
+            return GetWorkingBeatmap(newBeatmap.BeatmapInfo);
         }
 
         /// <summary>
