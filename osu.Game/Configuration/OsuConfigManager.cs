@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using osu.Framework.Configuration;
 using osu.Framework.Configuration.Tracking;
 using osu.Framework.Extensions;
@@ -102,6 +103,9 @@ namespace osu.Game.Configuration
 
             SetDefault(OsuSetting.MenuParallax, true);
 
+            // See https://stackoverflow.com/a/63307411 for default sourcing.
+            SetDefault(OsuSetting.Prefer24HourTime, CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains(@"tt"));
+
             // Gameplay
             SetDefault(OsuSetting.PositionalHitsounds, true); // replaced by level setting below, can be removed 20220703.
             SetDefault(OsuSetting.PositionalHitsoundsLevel, 0.2f, 0, 1);
@@ -129,6 +133,8 @@ namespace osu.Game.Configuration
             SetDefault(OsuSetting.ReleaseStream, ReleaseStream.Lazer);
 
             SetDefault(OsuSetting.Version, string.Empty);
+
+            SetDefault(OsuSetting.ShowFirstRunSetup, true);
 
             SetDefault(OsuSetting.ScreenshotFormat, ScreenshotFormat.Jpg);
             SetDefault(OsuSetting.ScreenshotCaptureMenuCursor, false);
@@ -269,6 +275,8 @@ namespace osu.Game.Configuration
         AlwaysPlayFirstComboBreak,
         FloatingComments,
         HUDVisibilityMode,
+
+        // This has been migrated to the component itself. can be removed 20221027.
         ShowProgressGraph,
         ShowHealthDisplayWhenCantFail,
         FadePlayfieldWhenHealthLow,
@@ -287,6 +295,7 @@ namespace osu.Game.Configuration
         MenuVoice,
         CursorRotation,
         MenuParallax,
+        Prefer24HourTime,
         BeatmapDetailTab,
         BeatmapDetailModsFilter,
         Username,
@@ -303,6 +312,7 @@ namespace osu.Game.Configuration
         BeatmapListingCardSize,
         ToolbarClockDisplayMode,
         Version,
+        ShowFirstRunSetup,
         ShowConvertedBeatmaps,
         Skin,
         ScreenshotFormat,

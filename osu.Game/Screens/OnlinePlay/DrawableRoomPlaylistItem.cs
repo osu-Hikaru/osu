@@ -26,6 +26,7 @@ using osu.Game.Online;
 using osu.Game.Online.Chat;
 using osu.Game.Online.Rooms;
 using osu.Game.Overlays.BeatmapSet;
+using osu.Game.Resources.Localisation.Web;
 using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Screens.Play.HUD;
@@ -63,6 +64,8 @@ namespace osu.Game.Screens.OnlinePlay
         public readonly Bindable<PlaylistItem> SelectedItem = new Bindable<PlaylistItem>();
 
         public readonly PlaylistItem Item;
+
+        public bool IsSelectedItem => SelectedItem.Value?.ID == Item.ID;
 
         private readonly DelayedLoadWrapper onScreenLoader = new DelayedLoadWrapper(Empty) { RelativeSizeAxes = Axes.Both };
         private readonly IBindable<bool> valid = new Bindable<bool>();
@@ -127,12 +130,10 @@ namespace osu.Game.Screens.OnlinePlay
 
             SelectedItem.BindValueChanged(selected =>
             {
-                bool isCurrent = selected.NewValue == Model;
-
                 if (!valid.Value)
                 {
                     // Don't allow selection when not valid.
-                    if (isCurrent)
+                    if (IsSelectedItem)
                     {
                         SelectedItem.Value = selected.OldValue;
                     }
@@ -141,7 +142,7 @@ namespace osu.Game.Screens.OnlinePlay
                     return;
                 }
 
-                maskingContainer.BorderThickness = isCurrent ? 5 : 0;
+                maskingContainer.BorderThickness = IsSelectedItem ? 5 : 0;
             }, true);
 
             valid.BindValueChanged(_ => Scheduler.AddOnce(refresh));
@@ -449,7 +450,7 @@ namespace osu.Game.Screens.OnlinePlay
                 Size = new Vector2(30, 30),
                 Alpha = AllowEditing ? 1 : 0,
                 Action = () => RequestEdit?.Invoke(Item),
-                TooltipText = "Edit"
+                TooltipText = CommonStrings.ButtonsEdit
             },
             removeButton = new PlaylistRemoveButton
             {
