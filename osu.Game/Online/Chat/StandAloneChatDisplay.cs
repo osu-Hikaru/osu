@@ -12,7 +12,9 @@ using osu.Framework.Input.Events;
 using osu.Game.Graphics;
 using osu.Game.Graphics.UserInterface;
 using osu.Game.Overlays.Chat;
+using osu.Game.Resources.Localisation.Web;
 using osuTK.Graphics;
+using osuTK.Input;
 
 namespace osu.Game.Online.Chat
 {
@@ -63,7 +65,7 @@ namespace osu.Game.Online.Chat
                 {
                     RelativeSizeAxes = Axes.X,
                     Height = text_box_height,
-                    PlaceholderText = "type your message",
+                    PlaceholderText = ChatStrings.InputPlaceholder,
                     CornerRadius = corner_radius,
                     ReleaseFocusOnCommit = false,
                     HoldFocus = true,
@@ -118,6 +120,20 @@ namespace osu.Game.Online.Chat
 
         public class ChatTextBox : FocusedTextBox
         {
+            protected override bool OnKeyDown(KeyDownEvent e)
+            {
+                // Chat text boxes are generally used in places where they retain focus, but shouldn't block interaction with other
+                // elements on the same screen.
+                switch (e.Key)
+                {
+                    case Key.Up:
+                    case Key.Down:
+                        return false;
+                }
+
+                return base.OnKeyDown(e);
+            }
+
             protected override void LoadComplete()
             {
                 base.LoadComplete();
