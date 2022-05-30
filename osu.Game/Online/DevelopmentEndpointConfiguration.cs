@@ -7,11 +7,11 @@ namespace osu.Game.Online
     {
         public DevelopmentEndpointConfiguration()
         {
-            WebsiteRootUrl = APIEndpointUrl = @"https://dev.ppy.sh";
+            WebsiteRootUrl = APIEndpointUrl = @"https://dev.hikaru.pw";
             APIClientSecret = @"3LP2mhUrV89xxzD1YKNndXHEhWWCRLPNKioZ9ymT";
             APIClientID = "5";
-            SpectatorEndpointUrl = $"{APIEndpointUrl}/spectator";
-            MultiplayerEndpointUrl = $"{APIEndpointUrl}/multiplayer";
+            SpectatorEndpointUrl = $"https://spectator2.hikaru.pw/spectator";
+            MultiplayerEndpointUrl = $"https://spectator2.hikaru.pw/multiplayer";
         }
     }
 }

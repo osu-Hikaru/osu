@@ -1,4 +1,4 @@
-// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
@@ -18,13 +18,14 @@ using osu.Game.Rulesets;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu;
 using osu.Game.Rulesets.Osu.Mods;
+using osu.Game.Tests.Mods;
 using osuTK;
 using osuTK.Input;
 
 namespace osu.Game.Tests.Visual.UserInterface
 {
     [TestFixture]
-    public class TestSceneModSelectScreen : OsuManualInputManagerTestScene
+    public class TestSceneModSelectOverlay : OsuManualInputManagerTestScene
     {
         [Resolved]
         private RulesetStore rulesetStore { get; set; }
@@ -222,7 +223,7 @@ namespace osu.Game.Tests.Visual.UserInterface
         public void TestSettingsNotCrossPolluting()
         {
             Bindable<IReadOnlyList<Mod>> selectedMods2 = null;
-            ModSelectOverlay modSelectScreen2 = null;
+            ModSelectOverlay modSelectOverlay2 = null;
 
             createScreen();
             AddStep("select diff adjust", () => SelectedMods.Value = new Mod[] { new OsuModDifficultyAdjust() });
@@ -235,7 +236,7 @@ namespace osu.Game.Tests.Visual.UserInterface
 
             AddStep("create second overlay", () =>
             {
-                Add(modSelectScreen2 = new UserModSelectOverlay().With(d =>
+                Add(modSelectOverlay2 = new UserModSelectOverlay().With(d =>
                 {
                     d.Origin = Anchor.TopCentre;
                     d.Anchor = Anchor.TopCentre;
@@ -243,7 +244,7 @@ namespace osu.Game.Tests.Visual.UserInterface
                 }));
             });
 
-            AddStep("show", () => modSelectScreen2.Show());
+            AddStep("show", () => modSelectOverlay2.Show());
 
             AddAssert("ensure first is unchanged", () => SelectedMods.Value.OfType<OsuModDifficultyAdjust>().Single().CircleSize.Value == 8);
             AddAssert("ensure second is default", () => selectedMods2.Value.OfType<OsuModDifficultyAdjust>().Single().CircleSize.Value == null);
@@ -416,7 +417,7 @@ namespace osu.Game.Tests.Visual.UserInterface
         }
 
         [Test]
-        public void TestDeselectAllViaButton()
+        public void TestDeselectAllViaKey()
         {
             createScreen();
             changeRuleset(0);
@@ -424,12 +425,29 @@ namespace osu.Game.Tests.Visual.UserInterface
             AddStep("select DT + HD", () => SelectedMods.Value = new Mod[] { new OsuModDoubleTime(), new OsuModHidden() });
             AddAssert("DT + HD selected", () => modSelectOverlay.ChildrenOfType<ModPanel>().Count(panel => panel.Active.Value) == 2);
 
+            AddStep("press backspace", () => InputManager.Key(Key.BackSpace));
+            AddUntilStep("all mods deselected", () => !SelectedMods.Value.Any());
+        }
+
+        [Test]
+        public void TestDeselectAllViaButton()
+        {
+            createScreen();
+            changeRuleset(0);
+
+            AddAssert("deselect all button disabled", () => !this.ChildrenOfType<DeselectAllModsButton>().Single().Enabled.Value);
+
+            AddStep("select DT + HD", () => SelectedMods.Value = new Mod[] { new OsuModDoubleTime(), new OsuModHidden() });
+            AddAssert("DT + HD selected", () => modSelectOverlay.ChildrenOfType<ModPanel>().Count(panel => panel.Active.Value) == 2);
+            AddAssert("deselect all button enabled", () => this.ChildrenOfType<DeselectAllModsButton>().Single().Enabled.Value);
+
             AddStep("click deselect all button", () =>
             {
-                InputManager.MoveMouseTo(this.ChildrenOfType<ShearedButton>().Last());
+                InputManager.MoveMouseTo(this.ChildrenOfType<DeselectAllModsButton>().Single());
                 InputManager.Click(MouseButton.Left);
             });
             AddUntilStep("all mods deselected", () => !SelectedMods.Value.Any());
+            AddAssert("deselect all button disabled", () => !this.ChildrenOfType<DeselectAllModsButton>().Single().Enabled.Value);
         }
 
         [Test]
@@ -479,6 +497,21 @@ namespace osu.Game.Tests.Visual.UserInterface
 
             AddStep("show", () => modSelectOverlay.Show());
             AddUntilStep("3 columns visible", () => this.ChildrenOfType<ModColumn>().Count(col => col.IsPresent) == 3);
+        }
+
+        [Test]
+        public void TestColumnHidingOnRulesetChange()
+        {
+            createScreen();
+
+            changeRuleset(0);
+            AddAssert("5 columns visible", () => this.ChildrenOfType<ModColumn>().Count(col => col.IsPresent) == 5);
+
+            AddStep("change to ruleset without all mod types", () => Ruleset.Value = TestCustomisableModRuleset.CreateTestRulesetInfo());
+            AddUntilStep("1 column visible", () => this.ChildrenOfType<ModColumn>().Count(col => col.IsPresent) == 1);
+
+            changeRuleset(0);
+            AddAssert("5 columns visible", () => this.ChildrenOfType<ModColumn>().Count(col => col.IsPresent) == 5);
         }
 
         private void waitForColumnLoad() => AddUntilStep("all column content loaded",

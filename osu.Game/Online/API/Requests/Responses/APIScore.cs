@@ -14,6 +14,8 @@ using osu.Game.Rulesets.Mods;
 using osu.Game.Scoring;
 using osu.Game.Scoring.Legacy;
 using osu.Game.Users;
+using osu.Framework;
+using osu.Framework.Logging;
 
 namespace osu.Game.Online.API.Requests.Responses
 {
@@ -93,7 +95,7 @@ namespace osu.Game.Online.API.Requests.Responses
             var modInstances = Mods.Select(apiMod => rulesetInstance.CreateModFromAcronym(apiMod.Acronym)).Where(m => m != null).ToArray();
 
             // all API scores provided by this class are considered to be legacy.
-            modInstances = modInstances.Append(rulesetInstance.CreateMod<ModClassic>()).ToArray();
+            //modInstances = modInstances.Append(rulesetInstance.CreateMod<ModClassic>()).ToArray();
 
             var scoreInfo = new ScoreInfo
             {
@@ -117,28 +119,56 @@ namespace osu.Game.Online.API.Requests.Responses
                 {
                     switch (kvp.Key)
                     {
-                        case @"count_geki":
-                            scoreInfo.SetCountGeki(kvp.Value);
+                        case @"great":
+                            scoreInfo.SetCountGreat(kvp.Value);
                             break;
 
-                        case @"count_300":
-                            scoreInfo.SetCount300(kvp.Value);
+                        case @"good":
+                            scoreInfo.SetCountGood(kvp.Value);
                             break;
 
-                        case @"count_katu":
-                            scoreInfo.SetCountKatu(kvp.Value);
+                        case @"ok":
+                            scoreInfo.SetCountOk(kvp.Value);
                             break;
 
-                        case @"count_100":
-                            scoreInfo.SetCount100(kvp.Value);
+                        case @"meh":
+                            scoreInfo.SetCountMeh(kvp.Value);
                             break;
 
-                        case @"count_50":
-                            scoreInfo.SetCount50(kvp.Value);
-                            break;
-
-                        case @"count_miss":
+                        case @"miss":
                             scoreInfo.SetCountMiss(kvp.Value);
+                            break;
+
+                        case @"small_bonus":
+                            scoreInfo.SetCountSB(kvp.Value);
+                            break;
+
+                        case @"large_bonus":
+                            scoreInfo.SetCountLB(kvp.Value);
+                            break;
+
+                        case @"small_tick_miss":
+                            scoreInfo.SetCountSTM(kvp.Value);
+                            break;
+
+                        case @"small_tick_hit":
+                            scoreInfo.SetCountSTH(kvp.Value);
+                            break;
+
+                        case @"large_tick_miss":
+                            scoreInfo.SetCountLTM(kvp.Value);
+                            break;
+
+                        case @"large_tick_hit":
+                            scoreInfo.SetCountLTH(kvp.Value);
+                            break;
+
+                        case @"ignore_miss":
+                            scoreInfo.SetCountIM(kvp.Value);
+                            break;
+
+                        case @"ignore_hit":
+                            scoreInfo.SetCountIH(kvp.Value);
                             break;
                     }
                 }
