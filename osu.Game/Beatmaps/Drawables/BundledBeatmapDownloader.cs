@@ -117,7 +117,7 @@ namespace osu.Game.Beatmaps.Drawables
 
             public class BundledBeatmapDownloadRequest : DownloadBeatmapSetRequest
             {
-                protected override string Uri => $"https://assets.ppy.sh/client-resources/bundled/{Model.OnlineID}.osz";
+                protected override string Uri => $"https://assets.hikaru.pw/client-resources/bundled/{Model.OnlineID}.osz";
 
                 public BundledBeatmapDownloadRequest(IBeatmapSetInfo beatmapSetInfo, bool minimiseDownloadSize)
                     : base(beatmapSetInfo, minimiseDownloadSize)
