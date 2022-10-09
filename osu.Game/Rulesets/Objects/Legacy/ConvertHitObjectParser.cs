@@ -449,7 +449,7 @@ namespace osu.Game.Rulesets.Objects.Legacy
             {
                 new LegacyHitSampleInfo(HitSampleInfo.HIT_NORMAL, bankInfo.Normal, bankInfo.Volume, bankInfo.CustomSampleBank,
                     // if the sound type doesn't have the Normal flag set, attach it anyway as a layered sample.
-                    // None also counts as a normal non-layered sample: https://osu.ppy.sh/help/wiki/osu!_File_Formats/Osu_(file_format)#hitsounds
+                    // None also counts as a normal non-layered sample: https://osu.hikaru.pw/help/wiki/osu!_File_Formats/Osu_(file_format)#hitsounds
                     type != LegacyHitSoundType.None && !type.HasFlagFast(LegacyHitSoundType.Normal))
             };
 

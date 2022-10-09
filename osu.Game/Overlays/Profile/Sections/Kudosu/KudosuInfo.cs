@@ -45,7 +45,7 @@ namespace osu.Game.Overlays.Profile.Sections.Kudosu
                 : base(UsersStrings.ShowExtraKudosuTotal)
             {
                 DescriptionText.AddText("Based on how much of a contribution the user has made to beatmap moderation. See ");
-                DescriptionText.AddLink("this page", "https://osu.ppy.sh/wiki/Kudosu");
+                DescriptionText.AddLink("this page", "https://osu.hikaru.pw/wiki/Kudosu");
                 DescriptionText.AddText(" for more information.");
             }
         }

@@ -150,7 +150,7 @@ namespace osu.Game.Overlays.News.Sidebar
                 HoverColour = overlayColours.Light1;
 
                 TooltipText = "view in browser";
-                Action = () => host.OpenUrlExternally("https://osu.ppy.sh/home/news/" + post.Slug);
+                Action = () => host.OpenUrlExternally("https://osu.hikaru.pw/home/news/" + post.Slug);
             }
         }
 

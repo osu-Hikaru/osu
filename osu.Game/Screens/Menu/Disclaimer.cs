@@ -144,7 +144,7 @@ namespace osu.Game.Screens.Menu
                 else
                 {
                     supportFlow.AddText("Consider becoming an ", formatSemiBold);
-                    supportFlow.AddLink("osu!supporter", "https://osu.ppy.sh/home/support", formatSemiBold);
+                    supportFlow.AddLink("osu!supporter", "https://osu.hikaru.pw/home/support", formatSemiBold);
                     supportFlow.AddText(" to help support osu!'s development", formatSemiBold);
                 }
 

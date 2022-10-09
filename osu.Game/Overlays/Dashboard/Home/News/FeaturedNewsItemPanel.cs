@@ -136,7 +136,7 @@ namespace osu.Game.Overlays.Dashboard.Home.News
                 bg.OnLoadComplete += d => d.FadeIn(250, Easing.In);
 
                 TooltipText = "view in browser";
-                Action = () => host.OpenUrlExternally("https://osu.ppy.sh/home/news/" + post.Slug);
+                Action = () => host.OpenUrlExternally("https://osu.hikaru.pw/home/news/" + post.Slug);
 
                 HoverColour = Color4.White;
             }

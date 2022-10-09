@@ -13,7 +13,7 @@ namespace osu.Game.Rulesets.Edit.Checks
     public class CheckBackgroundQuality : ICheck
     {
         // These are the requirements as stated in the Ranking Criteria.
-        // See https://osu.ppy.sh/wiki/en/Ranking_Criteria#rules.5
+        // See https://osu.hikaru.pw/wiki/en/Ranking_Criteria#rules.5
         private const int min_width = 160;
         private const int max_width = 2560;
         private const int min_height = 120;

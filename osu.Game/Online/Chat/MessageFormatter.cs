@@ -61,7 +61,7 @@ namespace osu.Game.Online.Chat
                                     .Split('/').Last(); // only keep domain name, ignoring protocol.
         }
 
-        private static string websiteRootUrl = "osu.ppy.sh";
+        private static string websiteRootUrl = "osu.hikaru.pw";
 
         private static void handleMatches(Regex regex, string display, string link, MessageFormatterResult result, int startIndex = 0, LinkAction? linkActionOverride = null, char[]? escapeChars = null)
         {
