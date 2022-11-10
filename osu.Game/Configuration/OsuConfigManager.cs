@@ -5,7 +5,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using osu.Framework.Configuration;
 using osu.Framework.Configuration.Tracking;
 using osu.Framework.Extensions;
@@ -115,7 +114,7 @@ namespace osu.Game.Configuration
             SetDefault(OsuSetting.MenuParallax, true);
 
             // See https://stackoverflow.com/a/63307411 for default sourcing.
-            SetDefault(OsuSetting.Prefer24HourTime, CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains(@"tt"));
+            SetDefault(OsuSetting.Prefer24HourTime, !CultureInfoHelper.SystemCulture.DateTimeFormat.ShortTimePattern.Contains(@"tt"));
 
             // Gameplay
             SetDefault(OsuSetting.PositionalHitsoundsLevel, 0.2f, 0, 1);
@@ -173,6 +172,7 @@ namespace osu.Game.Configuration
 
             SetDefault(OsuSetting.EditorDim, 0.25f, 0f, 0.75f, 0.25f);
             SetDefault(OsuSetting.EditorWaveformOpacity, 0.25f, 0f, 1f, 0.25f);
+            SetDefault(OsuSetting.EditorShowHitMarkers, true);
 
             SetDefault(OsuSetting.LastProcessedMetadataId, -1);
         }
@@ -367,5 +367,6 @@ namespace osu.Game.Configuration
         ShowOnlineExplicitContent,
         LastProcessedMetadataId,
         SafeAreaConsiderations,
+        EditorShowHitMarkers
     }
 }
